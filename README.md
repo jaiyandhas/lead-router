@@ -13,16 +13,68 @@ The core problem: three stakeholders (Sales, Growth, Founder) have conflicting r
 
 ## Architecture
 
-### Routing vs Scoring
+### Why Ordered Rules Instead of Weighted Scoring?
 
-This system is a **routing engine**, not a scoring engine. The distinction matters:
+The three stakeholders did not express *weighted preferences*. They expressed *absolute business priorities*:
 
-- A scoring engine picks a winner by comparing numbers. The routing decision is implicit.
-- A routing engine applies ordered business rules. The decision is explicit and auditable.
+- The **Founder** said: urgency overrides everything — if someone needs help now, a human must respond regardless of company size or budget.
+- **Sales** said: only companies with 50+ employees and budgets above $10k deserve a sales call.
+- **Growth** said: every lead must be stored, full stop.
 
-Routing decisions are determined exclusively by rule priority order. A numeric `score` field exists for human readability and dashboard display only — it is never compared between leads to make a routing decision.
+These are not inputs to a formula. They are ordered rules with a clear hierarchy.
 
-### The three routes
+**Weighted scoring fails here for three reasons:**
+
+1. **Arbitrary numbers.** What score should urgency add — 50 points? 80? Someone decides once and nobody revisits it. The number carries no business meaning.
+2. **Silent interactions.** A very large company with no urgency can outscore an urgent small company. Is that the intended behaviour? The system won't tell you — you'll just see a number.
+3. **Hard to audit.** When a sales rep asks "why wasn't this lead sent to me?", a score of 68 is not an explanation. A `matchedRules` field containing `['qualified_sales_lead']` is.
+
+**Ordered rules solve all three:**
+
+- The priority order is the specification. Read it and you know exactly what will happen for any lead.
+- Adding a rule means inserting it at the correct array position. No weights to recalibrate.
+- `matchedRules` tells you precisely which rule fired — for sales, support, audit, and future ML workflows.
+
+The numeric `score` field exists as supporting metadata for dashboards and human readability. It is derived from which rule fires. It is **never compared between leads** and **never used to make a routing decision**.
+
+---
+
+### Routing Priority
+
+Evaluation stops at the **first matching rule**. Rules do not interact with each other.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  Priority 1: urgency_detected                                       │
+│                                                                     │
+│  Condition:  Urgency keyword found in stated intent                 │
+│              (e.g. "ASAP", "this quarter", "immediately")           │
+│  Route:      human_immediate                                        │
+│  Rationale:  Founder requirement — time-sensitive needs override    │
+│              all other qualification criteria                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  Priority 2: qualified_sales_lead                                   │
+│                                                                     │
+│  Condition:  Company size ≥50 employees AND budget ≥$10k            │
+│              Both conditions must be true                           │
+│  Route:      human_standard                                         │
+│  Rationale:  Sales team requirement — minimum thresholds for        │
+│              a call to be worth a sales rep's time                  │
+├─────────────────────────────────────────────────────────────────────┤
+│  Priority 3: default fallthrough                                    │
+│                                                                     │
+│  Condition:  No rule above matched                                  │
+│  Route:      crm_only                                               │
+│  Rationale:  Growth requirement — store every lead for nurture      │
+│              and retargeting regardless of current qualification    │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+To add a new rule: register its name in `domain/types.ts → RuleName`, then insert a `Rule` object at the correct array position in `domain/routing/rules.ts`. **The engine function does not change.**
+
+---
+
+### The Three Routes
 
 | Route | Condition | Stakeholder |
 |---|---|---|
@@ -30,25 +82,38 @@ Routing decisions are determined exclusively by rule priority order. A numeric `
 | `human_standard` | Company ≥50 employees **and** budget ≥$10k | Sales |
 | `crm_only` | Everything else — stored for nurture | Growth |
 
-### Rule priority
+---
 
-Rules are evaluated in order. **The first matching rule wins.** There is no scoring, no weight tuning, no implicit interaction between rules.
-
-```
-Priority 1: urgency_detected     → human_immediate
-Priority 2: qualified_sales_lead → human_standard
-Priority 3: (default fallthrough) → crm_only
-```
-
-Adding a new rule means inserting a rule object at the correct array position. The routing engine itself does not change.
-
-### Why `matchedRules` exists
+### Why `matchedRules` Exists
 
 `matchedRules` is an **explainability feature**, not a debug field. It answers:
+
 - **Sales**: "Why wasn't this lead routed to me?"
 - **Support**: "Why didn't anyone call this person back?"
-- **Audit**: Historical record of which rule fired at the time of submission.
+- **Audit**: Historical record of exactly which rule fired at the time of submission — even if rules change later.
 - **Future ML**: Ground truth labels for supervised learning if routing is ever AI-assisted.
+
+`matchedRules` is typed as `RuleName[]` (not `string[]`) so the compiler catches typos and keeps rule registration centralised in `domain/types.ts`.
+
+---
+
+### Immutable Decision Snapshot
+
+Every persisted lead stores both the submitted data **and** the routing decision made at the time of submission:
+
+| Field | Source |
+|---|---|
+| `name`, `email`, `companySize`, `budget`, `intent` | Submitted form data |
+| `id` | Generated by the database |
+| `createdAt` | Written at insert time |
+| `route` | Routing engine output |
+| `score` | Routing engine output |
+| `reason` | Routing engine output |
+| `matchedRules` | Routing engine output |
+
+**Why not re-derive the routing result when reading leads?**
+
+Routing rules will evolve. A lead submitted today might receive a different route if re-evaluated against next quarter's rules. Storing the snapshot means you can always answer "what decision was made, and why, at the moment this lead came in" — without re-running business logic against stale data. This is the append-only audit log pattern.
 
 ---
 
@@ -107,7 +172,7 @@ src/
 ### Prerequisites
 
 - Node.js 18+
-- A Supabase project (see [Step 3 setup](#supabase-setup) below)
+- A Supabase project (see [Supabase Setup](#supabase-setup) below)
 
 ### Install dependencies
 
@@ -129,19 +194,30 @@ Open [http://localhost:3000](http://localhost:3000).
 npm test
 ```
 
-Tests are co-located with the modules they cover in `src/domain/routing/`. Because `routeLead()` is a pure function, the entire test suite runs with zero mocks, zero network calls, and zero database connections.
+The routing engine is a pure function (`routeLead`), so the entire test suite runs with **zero mocks, zero network calls, and zero database connections.**
 
 ```
 ✓ src/domain/routing/engine.test.ts (14 tests)
 ```
 
+The 14 tests cover six categories of behaviour:
+
+| Category | What is verified |
+|---|---|
+| **Priority order** | Urgency always fires before qualification; a qualified urgent lead goes to `human_immediate`, not `human_standard` |
+| **Urgency detection** | All defined keywords (`asap`, `this quarter`, `immediately`, `as soon as possible`, etc.) trigger `urgency_detected` |
+| **Case-insensitive matching** | `"NEED THIS IMMEDIATELY"` produces the same result as `"need this immediately"` |
+| **Qualification logic** | Both conditions (company ≥50 employees AND budget ≥$10k) must be true; either alone falls through to `crm_only` |
+| **Fallthrough behaviour** | An unqualified, non-urgent lead produces `crm_only` with `matchedRules: []` |
+| **Result shape invariants** | Every route produces a numeric score in [0, 100] and a non-empty reason string |
+
 ---
 
 ## Environment Variables
 
-> These are required for Steps 3–7 (persistence and deployment). The app will run without them for Steps 1–2.
+> Required for Steps 3–7 (persistence and deployment). The routing engine and tests run without them.
 
-Create a `.env.local` file at the project root (this file is gitignored):
+Create a `.env.local` file at the project root (already gitignored):
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
@@ -167,7 +243,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 | Step | Status | Description |
 |---|---|---|
 | Step 1 | ✅ Complete | Domain types |
-| Step 2 | ✅ Complete | Routing engine + tests |
+| Step 2 | ✅ Complete | Routing engine + 14 tests |
 | Step 3 | 🔜 Next | Supabase persistence |
 | Step 4 | 🔜 Pending | API route |
 | Step 5 | 🔜 Pending | Lead form |
@@ -177,9 +253,6 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ---
 
 ## Design Decisions
-
-**Why not weighted scoring?**  
-Weights are arbitrary numbers that someone tuned once and never revisited. They interact silently — a large company with no urgency can outscore an urgent small company. With explicit priority rules, every decision is auditable: you can read the rule list and predict the outcome for any lead.
 
 **Why string literal unions instead of TypeScript enums?**  
 Enums compile to JavaScript objects with reverse mappings, have surprising numeric edge cases, and are heavier than necessary for a finite set of string values. String literal unions have zero runtime footprint and serialize naturally to JSON and databases.
@@ -192,3 +265,6 @@ Enums compile to JavaScript objects with reverse mappings, have surprising numer
 
 **Why is `ScoredLead` not a type?**  
 A `Lead` plus a `RoutingResult` are just two variables in the API route. Bundling them into a `ScoredLead` type would create a type that exists only to carry data between two adjacent lines of code — not a domain concept worth naming.
+
+**Why does `detectUrgency` prefer false positives over false negatives?**  
+A missed urgency signal means a time-sensitive person waits. A false positive means a non-urgent lead gets faster attention than necessary. In a B2B sales context, the cost of the latter is far lower. The keyword list is intentionally broad.

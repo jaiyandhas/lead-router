@@ -75,17 +75,31 @@ export interface LeadInput {
 /**
  * Lead
  *
- * A validated, persisted record.
- * Extends LeadInput because a Lead *is* a LeadInput plus persistence metadata.
+ * The full persisted record — what gets written to the database and returned
+ * by getLeads(). It is a snapshot of both the submitted data and the routing
+ * decision made at the moment of submission.
+ *
+ * Why store the routing result alongside the lead?
+ * Routing rules will evolve. A lead submitted today might be routed differently
+ * if re-evaluated against tomorrow's rules. Storing the decision as-written
+ * preserves an auditable history: you can always answer "why was this lead
+ * routed this way?" without re-running logic against stale data.
+ *
+ * The record is written once and never updated (append-only).
  *
  * `createdAt` is an ISO 8601 string, not a Date object.
- * Date objects do not survive JSON serialization cleanly — they become strings
- * regardless. Keeping it as string avoids silent parse/serialize roundtrips
- * in API responses. Convert to Date at the display layer only when formatting.
+ * Date objects do not survive JSON serialization — they become strings anyway.
+ * Keeping it as string avoids silent parse/serialize roundtrips in API responses.
+ * Convert to Date at the display layer only when formatting for the UI.
  */
 export interface Lead extends LeadInput {
   id: string
   createdAt: string
+  // Routing snapshot — written once at submission time, immutable thereafter.
+  route: Route
+  score: number
+  reason: string
+  matchedRules: RuleName[]
 }
 
 /**
