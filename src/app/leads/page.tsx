@@ -17,13 +17,20 @@ import type { Lead, Route } from '@/domain/types'
  * an empty state with a setup message rather than throwing.
  */
 
+export const dynamic = 'force-dynamic'
+
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
 async function getLeads(): Promise<Lead[]> {
   if (!process.env.SUPABASE_URL) return []
 
-  const { listLeads } = await import('@/lib/supabase/leads')
-  return listLeads()
+  try {
+    const { listLeads } = await import('@/lib/supabase/leads')
+    return await listLeads()
+  } catch (err) {
+    console.error('Failed to fetch leads from Supabase:', err)
+    return []
+  }
 }
 
 // ── Route badge ───────────────────────────────────────────────────────────────

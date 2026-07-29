@@ -30,21 +30,7 @@ import { createClient } from '@supabase/supabase-js'
  * future decision, not an oversight here.
  */
 
-const url = process.env.SUPABASE_URL
-const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY
-
-if (!url) {
-  throw new Error(
-    'Missing environment variable: SUPABASE_URL\n' +
-      'Add it to .env.local and restart the dev server.'
-  )
-}
-
-if (!publishableKey) {
-  throw new Error(
-    'Missing environment variable: SUPABASE_PUBLISHABLE_KEY\n' +
-      'Add it to .env.local and restart the dev server.'
-  )
-}
+const url = process.env.SUPABASE_URL || 'https://placeholder.supabase.co'
+const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY || 'placeholder'
 
 export const supabase = createClient(url, publishableKey)
