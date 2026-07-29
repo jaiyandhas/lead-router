@@ -1,26 +1,303 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Design Tokens
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces */
+  --bg: #08090d;
+  --bg-card: rgba(18, 20, 32, 0.82);
+  --bg-input: rgba(255, 255, 255, 0.04);
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.07);
+  --border-input: rgba(255, 255, 255, 0.1);
+  --border-focus: rgba(99, 102, 241, 0.6);
+
+  /* Text */
+  --text-primary: #f0f2f8;
+  --text-secondary: #8892a4;
+  --text-muted: #4d5566;
+
+  /* Accent */
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+  --accent-muted: rgba(99, 102, 241, 0.12);
+
+  /* Route badges */
+  --route-urgent-bg: rgba(239, 68, 68, 0.12);
+  --route-urgent-text: #f87171;
+  --route-urgent-border: rgba(239, 68, 68, 0.25);
+
+  --route-standard-bg: rgba(59, 130, 246, 0.12);
+  --route-standard-text: #60a5fa;
+  --route-standard-border: rgba(59, 130, 246, 0.25);
+
+  --route-crm-bg: rgba(71, 85, 105, 0.2);
+  --route-crm-text: #94a3b8;
+  --route-crm-border: rgba(71, 85, 105, 0.35);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--text-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ============================================================
+   Base
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   Form primitives
+   ============================================================ */
+
+.field-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.375rem;
+  letter-spacing: 0.01em;
+}
+
+.field-input {
+  width: 100%;
+  padding: 0.6875rem 0.875rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+}
+
+.field-input::placeholder {
+  color: var(--text-muted);
+}
+
+.field-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.field-error {
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: #f87171;
+}
+
+/* Custom select arrow */
+.field-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238892a4' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  padding-right: 2.25rem;
+  cursor: pointer;
+}
+
+.field-select option {
+  background: #131520;
+  color: var(--text-primary);
+}
+
+/* ============================================================
+   Glass card
+   ============================================================ */
+
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  letter-spacing: 0.01em;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Route badges
+   ============================================================ */
+
+.route-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.route-badge--urgent {
+  background: var(--route-urgent-bg);
+  color: var(--route-urgent-text);
+  border-color: var(--route-urgent-border);
+}
+
+.route-badge--standard {
+  background: var(--route-standard-bg);
+  color: var(--route-standard-text);
+  border-color: var(--route-standard-border);
+}
+
+.route-badge--crm {
+  background: var(--route-crm-bg);
+  color: var(--route-crm-text);
+  border-color: var(--route-crm-border);
+}
+
+/* ============================================================
+   Rule chip
+   ============================================================ */
+
+.rule-chip {
+  display: inline-flex;
+  padding: 0.125rem 0.5rem;
+  background: var(--accent-muted);
+  color: var(--accent-hover);
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   Fade-in animation
+   ============================================================ */
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fadeSlideUp 0.4s ease-out forwards;
+}
+
+/* ============================================================
+   Table
+   ============================================================ */
+
+.leads-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leads-table th {
+  text-align: left;
+  padding: 0.625rem 1rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.leads-table td {
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  vertical-align: top;
+}
+
+.leads-table tr:last-child td {
+  border-bottom: none;
+}
+
+.leads-table tr:hover td {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+/* ============================================================
+   Stat card
+   ============================================================ */
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
 }

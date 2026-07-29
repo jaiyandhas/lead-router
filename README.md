@@ -324,10 +324,10 @@ In production, the `SELECT` policy would require an authenticated session with a
 | Step 1 | ✅ Complete | Domain types |
 | Step 2 | ✅ Complete | Routing engine + 14 tests |
 | Step 3 | ✅ Complete | Supabase persistence |
-| Step 4 | 🔜 Next | API route |
-| Step 5 | 🔜 Pending | Lead form |
-| Step 6 | 🔜 Pending | Internal /leads page |
-| Step 7 | 🔜 Pending | Vercel deployment |
+| Step 4 | ✅ Complete | API route (`POST /api/leads`) |
+| Step 5 | ✅ Complete | Lead form + Route-aware confirmation |
+| Step 6 | ✅ Complete | Internal `/leads` inspection page |
+| Step 7 | 🔜 Next | Vercel deployment |
 
 ---
 
