@@ -28,7 +28,7 @@ export default function HomePage() {
             Get in touch with us
           </h1>
           <p className="apple-subheading" style={{ maxWidth: 460, margin: '0 auto' }}>
-            Tell us about your organization and goals — we&apos;ll route your request to the right place.
+            We&apos;ll get back to you based on your needs.
           </p>
         </div>
 
