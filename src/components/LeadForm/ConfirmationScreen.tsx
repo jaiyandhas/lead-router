@@ -4,148 +4,91 @@ interface Props {
   lead: Lead
 }
 
-// Content is keyed by route — the UI never contains routing logic.
-// The component just reads lead.route and looks up the right copy.
 const CONTENT = {
   human_immediate: {
-    dot: '🔴',
-    tag: 'Urgent — within the hour',
+    tag: '⚡ Urgent Priority',
     tagClass: 'route-badge route-badge--urgent',
-    icon: (
-      <svg
-        width="40"
-        height="40"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        style={{ color: '#f87171' }}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
-        />
-      </svg>
-    ),
-    title: "You'll hear from us within the hour",
-    body: "Your request has been flagged as time-sensitive. Someone from our team is being notified right now.",
-    accentColor: '#f87171',
+    iconColor: '#d70015',
+    iconBg: '#ffeef0',
+    title: 'We will call you within the hour',
+    body: 'Your request was flagged as time-sensitive. Our team is being notified immediately.',
   },
   human_standard: {
-    dot: '🔵',
-    tag: 'Qualified — sales queue',
+    tag: '📋 Qualified Lead',
     tagClass: 'route-badge route-badge--standard',
-    icon: (
-      <svg
-        width="40"
-        height="40"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        style={{ color: '#60a5fa' }}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"
-        />
-      </svg>
-    ),
-    title: "You're in our sales pipeline",
-    body: "Your submission meets our qualification criteria. Expect a call from our team within 24–48 business hours.",
-    accentColor: '#60a5fa',
+    iconColor: '#0071e3',
+    iconBg: '#e8f2ff',
+    title: 'Your request is in our sales queue',
+    body: 'Thank you for reaching out. A account representative will follow up within 24 business hours.',
   },
   crm_only: {
-    dot: '⚪',
-    tag: 'Received',
+    tag: '○ Request Received',
     tagClass: 'route-badge route-badge--crm',
-    icon: (
-      <svg
-        width="40"
-        height="40"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        style={{ color: '#94a3b8' }}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    ),
-    title: "Thanks for reaching out",
-    body: "We've received your submission and will be in touch when the time is right for your team.",
-    accentColor: '#94a3b8',
+    iconColor: '#636366',
+    iconBg: '#f2f2f7',
+    title: 'Thank you for your submission',
+    body: 'We have logged your request and will follow up with relevant information for your team.',
   },
 } as const
 
 export default function ConfirmationScreen({ lead }: Props) {
-  const { icon, title, body, tag, tagClass, accentColor } = CONTENT[lead.route]
+  const { title, body, tag, tagClass, iconColor, iconBg } = CONTENT[lead.route]
 
   return (
-    <div className="animate-in text-center" style={{ padding: '2rem 0' }}>
-      {/* Icon */}
+    <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+      {/* Icon Circle */}
       <div
         style={{
-          width: 72,
-          height: 72,
+          width: 76,
+          height: 76,
           borderRadius: '50%',
-          background: `${accentColor}18`,
-          border: `1px solid ${accentColor}30`,
+          background: iconBg,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '0 auto 1.25rem',
+          margin: '0 auto 1.5rem',
         }}
       >
-        {icon}
+        <svg
+          width="36"
+          height="36"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={iconColor}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
       </div>
 
-      {/* Route tag */}
-      <div style={{ marginBottom: '1rem' }}>
+      <div style={{ marginBottom: '1.25rem' }}>
         <span className={tagClass}>{tag}</span>
       </div>
 
-      {/* Title */}
-      <h2
-        style={{
-          fontSize: '1.25rem',
-          fontWeight: 700,
-          color: 'var(--text-primary)',
-          margin: '0 0 0.75rem',
-          lineHeight: 1.3,
-        }}
-      >
+      <h2 className="apple-heading-lg" style={{ marginBottom: '0.75rem' }}>
         {title}
       </h2>
 
-      {/* Body */}
-      <p
-        style={{
-          fontSize: '0.9375rem',
-          color: 'var(--text-secondary)',
-          lineHeight: 1.6,
-          margin: '0 0 1.5rem',
-        }}
-      >
+      <p className="apple-subheading" style={{ marginBottom: '2rem' }}>
         {body}
       </p>
 
-      {/* Reference line */}
-      <p
+      <div
         style={{
-          fontSize: '0.75rem',
+          padding: '1rem',
+          background: '#f5f5f7',
+          borderRadius: '0.75rem',
+          fontSize: '0.8125rem',
           color: 'var(--text-muted)',
           fontFamily: 'var(--font-mono)',
+          display: 'inline-block',
         }}
       >
-        ref: {lead.id.slice(0, 8)}
-      </p>
+        Reference ID: {lead.id.slice(0, 8)}
+      </div>
     </div>
   )
 }

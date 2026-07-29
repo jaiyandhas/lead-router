@@ -1,13 +1,10 @@
 import LeadForm from '@/components/LeadForm/LeadForm'
+import Link from 'next/link'
 
 /**
  * app/page.tsx
  *
- * The public-facing lead submission page.
- * This is a server component — it renders on the server and sends HTML.
- * LeadForm is a client component and takes over interactivity in the browser.
- *
- * There is no data fetching here. The page is static shell + client form.
+ * Clean Apple-styled lead routing portal homepage.
  */
 
 export default function HomePage() {
@@ -16,86 +13,84 @@ export default function HomePage() {
       style={{
         minHeight: '100vh',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '2rem 1rem',
-        background:
-          'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.1) 0%, transparent 70%)',
+        padding: '3rem 1.5rem',
+        background: '#f5f5f7',
       }}
     >
-      <div style={{ width: '100%', maxWidth: 480 }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          {/* Logo mark */}
+      <div style={{ width: '100%', maxWidth: 540 }}>
+        {/* Top Header */}
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: '10px',
-              background: 'var(--accent)',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 1.25rem',
-              boxShadow: '0 4px 20px rgba(99,102,241,0.4)',
+              width: 56,
+              height: 56,
+              borderRadius: '16px',
+              background: '#0071e3',
+              boxShadow: '0 8px 20px rgba(0, 113, 227, 0.25)',
+              marginBottom: '1.25rem',
             }}
-            aria-hidden="true"
           >
             <svg
-              width="22"
-              height="22"
+              width="28"
+              height="28"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="white"
+              stroke="#ffffff"
               strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z"
-              />
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
             </svg>
           </div>
 
-          <h1
-            style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: 'var(--text-primary)',
-              margin: '0 0 0.5rem',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            Get started with us
+          <h1 className="apple-heading-xl" style={{ marginBottom: '0.75rem' }}>
+            Get in touch with us
           </h1>
-          <p
-            style={{
-              fontSize: '0.9375rem',
-              color: 'var(--text-secondary)',
-              margin: 0,
-              lineHeight: 1.5,
-            }}
-          >
-            Tell us about your team. We will get the right person in touch.
+          <p className="apple-subheading" style={{ maxWidth: 440, margin: '0 auto' }}>
+            Tell us about your organization and needs. We’ll connect you with the right team immediately.
           </p>
         </div>
 
-        {/* Form card */}
-        <div className="glass-card animate-in" style={{ padding: '2rem' }}>
+        {/* Clean Form Card */}
+        <div className="apple-card" style={{ padding: '2.5rem' }}>
           <LeadForm />
         </div>
 
-        {/* Footer note */}
-        <p
+        {/* Footer Link & Disclaimer */}
+        <div
           style={{
+            marginTop: '2rem',
             textAlign: 'center',
-            marginTop: '1.25rem',
-            fontSize: '0.75rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+            fontSize: '0.875rem',
             color: 'var(--text-muted)',
           }}
         >
-          We route every request to the right person. No spam.
-        </p>
+          <p style={{ margin: 0 }}>
+            Every request is automatically routed based on priority. No sales spam.
+          </p>
+          <div>
+            <Link
+              href="/leads"
+              style={{
+                color: '#0071e3',
+                fontWeight: 600,
+                textDecoration: 'none',
+              }}
+            >
+              View Internal Leads Dashboard →
+            </Link>
+          </div>
+        </div>
       </div>
     </main>
   )
