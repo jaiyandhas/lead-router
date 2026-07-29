@@ -220,21 +220,100 @@ The 14 tests cover six categories of behaviour:
 Create a `.env.local` file at the project root (already gitignored):
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_PUBLISHABLE_KEY=your-publishable-key-here
 ```
 
-**Why two Supabase keys?**
+**Why no `NEXT_PUBLIC_` prefix?**
 
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — safe to expose to the browser. Supabase Row Level Security (RLS) policies control what the anon key can and cannot do.
-- `SUPABASE_SERVICE_ROLE_KEY` — bypasses RLS entirely. **Never expose this to the browser.** It must only be used in server-side code (API routes). It has no `NEXT_PUBLIC_` prefix intentionally.
+In Next.js, variables prefixed with `NEXT_PUBLIC_` are bundled into the browser's JavaScript bundle — they're visible to anyone who opens DevTools. Variables without that prefix are server-only: only accessible in API routes and server components, never sent to the browser.
+
+The Supabase client in this project is server-side only. The browser never holds a database client. It submits a form to the API route and receives JSON back. There is no reason to expose the project URL or publishable key to the browser, so we don't.
 
 ---
 
 ## Supabase Setup
 
-> Coming in Step 3. Will include the `leads` table schema, RLS policies, and an explanation of what each policy protects.
+Run the following in your Supabase project → **SQL Editor → New Query**.
+
+### 1. Create the leads table
+
+```sql
+CREATE TABLE leads (
+  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at    TIMESTAMPTZ NOT NULL    DEFAULT now(),
+
+  -- LeadInput fields
+  name          TEXT        NOT NULL,
+  email         TEXT        NOT NULL,
+  company_size  TEXT        NOT NULL CHECK (company_size IN ('1-10', '11-49', '50-199', '200+')),
+  budget        TEXT        NOT NULL CHECK (budget IN ('under_10k', '10k_plus')),
+  intent        TEXT        NOT NULL,
+
+  -- RoutingResult snapshot (stored at write time, never recalculated)
+  route         TEXT        NOT NULL CHECK (route IN ('human_immediate', 'human_standard', 'crm_only')),
+  score         INTEGER     NOT NULL CHECK (score BETWEEN 0 AND 100),
+  reason        TEXT        NOT NULL,
+  matched_rules TEXT[]      NOT NULL
+);
+```
+
+The `CHECK` constraints mirror the TypeScript union types — valid values are enforced at both the type level (compile time) and the database level (runtime).
+
+### 2. Add the index
+
+```sql
+CREATE INDEX idx_leads_created_at
+  ON leads(created_at DESC);
+```
+
+`listLeads()` orders by `created_at DESC`. This index backs that query directly. The sort direction in the index definition matches the query — Postgres can satisfy the ORDER BY with an index scan rather than a sort step.
+
+A second index on `route` was considered and rejected: no current query filters by route, so an index there would slow down INSERTs (Postgres maintains every index on write) with no read benefit.
+
+### 3. Enable Row Level Security
+
+```sql
+-- Step 1: Enable RLS. Without this, all policies below are ignored.
+ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
+
+-- Step 2: Allow anonymous INSERT (anyone can submit a lead)
+CREATE POLICY "leads: anon can insert"
+  ON leads
+  FOR INSERT
+  TO anon
+  WITH CHECK (true);
+
+-- Step 3: Allow anonymous SELECT (anyone can read leads)
+CREATE POLICY "leads: anon can select"
+  ON leads
+  FOR SELECT
+  TO anon
+  USING (true);
+```
+
+### Understanding the publishable key and RLS
+
+This distinction is a common interview question and worth being precise about.
+
+**The publishable key identifies the Supabase project.** It tells the Supabase SDK which database cluster to connect to. It is not a personal credential — it does not authenticate a user or grant any inherent permissions. Everyone who uses your app shares the same publishable key.
+
+**Row Level Security policies determine what requests made with that key are actually allowed to do.** RLS is a Postgres feature. When enabled on a table, every query — regardless of who sent it — must pass a policy check. If no policy permits the operation, the request is denied.
+
+Putting it together:
+
+| What it does | Mechanism |
+|---|---|
+| Identifies which database to talk to | Publishable key |
+| Decides what operations are permitted | RLS policies |
+
+The publishable key without a permissive RLS policy grants nothing. An RLS policy without the publishable key cannot be reached. They are separate concerns — one is routing, one is authorization.
+
+### Why these policies are acceptable only for this assignment
+
+The anonymous `SELECT` policy means any visitor who knows your project URL can read every lead: names, emails, intent statements, and routing decisions. That is a privacy violation in production.
+
+In production, the `SELECT` policy would require an authenticated session with an appropriate role (`sales`, `admin`). The form submission `INSERT` might also go through a server-side API route using a service role key, with rate limiting to prevent spam.
 
 ---
 
@@ -244,8 +323,8 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 |---|---|---|
 | Step 1 | ✅ Complete | Domain types |
 | Step 2 | ✅ Complete | Routing engine + 14 tests |
-| Step 3 | 🔜 Next | Supabase persistence |
-| Step 4 | 🔜 Pending | API route |
+| Step 3 | ✅ Complete | Supabase persistence |
+| Step 4 | 🔜 Next | API route |
 | Step 5 | 🔜 Pending | Lead form |
 | Step 6 | 🔜 Pending | Internal /leads page |
 | Step 7 | 🔜 Pending | Vercel deployment |
