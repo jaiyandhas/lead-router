@@ -1,0 +1,150 @@
+import { describe, it, expect } from 'vitest'
+import { routeLead } from './engine'
+import type { LeadInput } from '../types'
+
+// ---------------------------------------------------------------------------
+// Test factory
+//
+// Defaults produce a crm_only lead — small company, low budget, neutral intent.
+// Each test overrides only what it needs to exercise a specific branch.
+// This keeps test cases focused on their own condition, not boilerplate.
+// ---------------------------------------------------------------------------
+
+function makeLead(overrides: Partial<LeadInput> = {}): LeadInput {
+  return {
+    name: 'Test User',
+    email: 'test@example.com',
+    companySize: '11-49',
+    budget: 'under_10k',
+    intent: 'just browsing',
+    ...overrides,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+describe('routeLead', () => {
+
+  // --- Priority 1: urgency_detected -----------------------------------------
+
+  describe('Priority 1 — urgency_detected', () => {
+    it('routes an urgent small company to human_immediate', () => {
+      const result = routeLead(
+        makeLead({ companySize: '1-10', budget: 'under_10k', intent: 'need this ASAP' })
+      )
+      expect(result.route).toBe('human_immediate')
+      expect(result.matchedRules).toEqual(['urgency_detected'])
+    })
+
+    it('urgency overrides a fully qualified lead — Priority 1 always fires first', () => {
+      // This lead would be human_standard if urgency were absent.
+      // The test proves urgency wins regardless.
+      const result = routeLead(
+        makeLead({ companySize: '200+', budget: '10k_plus', intent: 'this is urgent' })
+      )
+      expect(result.route).toBe('human_immediate')
+      expect(result.matchedRules).toEqual(['urgency_detected'])
+    })
+
+    it('detects "this quarter" as an urgency keyword', () => {
+      const result = routeLead(makeLead({ intent: 'need to launch this quarter' }))
+      expect(result.route).toBe('human_immediate')
+      expect(result.matchedRules).toContain('urgency_detected')
+    })
+
+    it('detects "as soon as possible" as an urgency keyword', () => {
+      const result = routeLead(makeLead({ intent: 'want to get started as soon as possible' }))
+      expect(result.route).toBe('human_immediate')
+    })
+
+    it('matches urgency keywords case-insensitively', () => {
+      const result = routeLead(makeLead({ intent: 'NEED THIS IMMEDIATELY' }))
+      expect(result.route).toBe('human_immediate')
+    })
+
+    it('does not trigger urgency on a neutral intent string', () => {
+      const result = routeLead(makeLead({ intent: 'exploring our options for next year' }))
+      expect(result.route).not.toBe('human_immediate')
+    })
+  })
+
+  // --- Priority 2: qualified_sales_lead -------------------------------------
+
+  describe('Priority 2 — qualified_sales_lead', () => {
+    it('routes a 50-199 company with 10k+ budget to human_standard', () => {
+      const result = routeLead(
+        makeLead({ companySize: '50-199', budget: '10k_plus', intent: 'evaluating options' })
+      )
+      expect(result.route).toBe('human_standard')
+      expect(result.matchedRules).toEqual(['qualified_sales_lead'])
+    })
+
+    it('routes a 200+ company with 10k+ budget to human_standard', () => {
+      const result = routeLead(
+        makeLead({ companySize: '200+', budget: '10k_plus', intent: 'evaluating tools' })
+      )
+      expect(result.route).toBe('human_standard')
+      expect(result.matchedRules).toEqual(['qualified_sales_lead'])
+    })
+
+    it('does not qualify: large company but insufficient budget', () => {
+      // Size threshold met, budget threshold not met — both must be true.
+      const result = routeLead(
+        makeLead({ companySize: '200+', budget: 'under_10k', intent: 'interested' })
+      )
+      expect(result.route).toBe('crm_only')
+    })
+
+    it('does not qualify: sufficient budget but company too small', () => {
+      // Budget threshold met, size threshold not met — both must be true.
+      const result = routeLead(
+        makeLead({ companySize: '1-10', budget: '10k_plus', intent: 'evaluating tools' })
+      )
+      expect(result.route).toBe('crm_only')
+    })
+
+    it('does not qualify: 11-49 employees falls below the 50-employee threshold', () => {
+      const result = routeLead(
+        makeLead({ companySize: '11-49', budget: '10k_plus', intent: 'exploring' })
+      )
+      expect(result.route).toBe('crm_only')
+    })
+  })
+
+  // --- Priority 3: crm_only (default fallthrough) ---------------------------
+
+  describe('Priority 3 — crm_only default', () => {
+    it('routes an unqualified non-urgent lead to crm_only', () => {
+      const result = routeLead(makeLead())
+      expect(result.route).toBe('crm_only')
+    })
+
+    it('crm_only result has an empty matchedRules array — no rules fired', () => {
+      const result = routeLead(makeLead())
+      expect(result.matchedRules).toEqual([])
+    })
+  })
+
+  // --- RoutingResult shape --------------------------------------------------
+
+  describe('RoutingResult — shape invariants', () => {
+    it('every result has a numeric score and a non-empty reason string', () => {
+      const cases = [
+        makeLead({ intent: 'asap' }),
+        makeLead({ companySize: '50-199', budget: '10k_plus' }),
+        makeLead(),
+      ]
+
+      for (const lead of cases) {
+        const result = routeLead(lead)
+        expect(typeof result.score).toBe('number')
+        expect(result.score).toBeGreaterThanOrEqual(0)
+        expect(result.score).toBeLessThanOrEqual(100)
+        expect(result.reason.length).toBeGreaterThan(0)
+      }
+    })
+  })
+
+})
