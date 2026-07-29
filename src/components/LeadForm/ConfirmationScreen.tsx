@@ -6,69 +6,35 @@ interface Props {
 
 const CONTENT = {
   human_immediate: {
-    tag: '⚡ Urgent Priority',
+    tag: 'Urgent Priority',
     tagClass: 'route-badge route-badge--urgent',
-    iconColor: '#d70015',
-    iconBg: '#ffeef0',
-    title: 'We will call you within the hour',
-    body: 'Your request was flagged as time-sensitive. Our team is being notified immediately.',
+    title: 'We will contact you within the hour',
+    body: 'Your submission was flagged as time-sensitive. A member of our executive team is being notified immediately.',
   },
   human_standard: {
-    tag: '📋 Qualified Lead',
+    tag: 'Qualified Lead',
     tagClass: 'route-badge route-badge--standard',
-    iconColor: '#0071e3',
-    iconBg: '#e8f2ff',
     title: 'Your request is in our sales queue',
-    body: 'Thank you for reaching out. A account representative will follow up within 24 business hours.',
+    body: 'Thank you for reaching out. An account manager will follow up within 24 business hours.',
   },
   crm_only: {
-    tag: '○ Request Received',
+    tag: 'Request Received',
     tagClass: 'route-badge route-badge--crm',
-    iconColor: '#636366',
-    iconBg: '#f2f2f7',
     title: 'Thank you for your submission',
-    body: 'We have logged your request and will follow up with relevant information for your team.',
+    body: 'We have logged your details and will follow up with relevant information for your team.',
   },
 } as const
 
 export default function ConfirmationScreen({ lead }: Props) {
-  const { title, body, tag, tagClass, iconColor, iconBg } = CONTENT[lead.route]
+  const { title, body, tag, tagClass } = CONTENT[lead.route]
 
   return (
-    <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-      {/* Icon Circle */}
-      <div
-        style={{
-          width: 76,
-          height: 76,
-          borderRadius: '50%',
-          background: iconBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 1.5rem',
-        }}
-      >
-        <svg
-          width="36"
-          height="36"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={iconColor}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-          <polyline points="22 4 12 14.01 9 11.01" />
-        </svg>
-      </div>
-
+    <div style={{ padding: '1.5rem 0' }}>
       <div style={{ marginBottom: '1.25rem' }}>
         <span className={tagClass}>{tag}</span>
       </div>
 
-      <h2 className="apple-heading-lg" style={{ marginBottom: '0.75rem' }}>
+      <h2 className="apple-heading-lg" style={{ marginBottom: '0.875rem' }}>
         {title}
       </h2>
 
@@ -78,8 +44,9 @@ export default function ConfirmationScreen({ lead }: Props) {
 
       <div
         style={{
-          padding: '1rem',
+          padding: '0.875rem 1.125rem',
           background: '#f5f5f7',
+          border: '1px solid #e5e5ea',
           borderRadius: '0.75rem',
           fontSize: '0.8125rem',
           color: 'var(--text-muted)',

@@ -4,7 +4,7 @@ import Link from 'next/link'
 /**
  * app/leads/page.tsx
  *
- * Internal inspection page — Apple-inspired clean dashboard layout.
+ * Internal inspection page — Clean typography-driven UI.
  */
 
 export const dynamic = 'force-dynamic'
@@ -29,15 +29,15 @@ function RouteBadge({ route }: { route: Route }) {
   const map = {
     human_immediate: {
       className: 'route-badge route-badge--urgent',
-      label: '⚡ Immediate',
+      label: 'Immediate Action',
     },
     human_standard: {
       className: 'route-badge route-badge--standard',
-      label: '📋 Sales Queue',
+      label: 'Sales Queue',
     },
     crm_only: {
       className: 'route-badge route-badge--crm',
-      label: '○ CRM Only',
+      label: 'CRM Nurture',
     },
   } as const
 
@@ -76,9 +76,9 @@ function StatsRow({ leads }: { leads: Lead[] }) {
 
   const stats = [
     { label: 'Total Submissions', value: leads.length, color: '#1d1d1f' },
-    { label: '⚡ Urgent Attention', value: immediate, color: '#d70015' },
-    { label: '📋 Sales Pipeline', value: standard, color: '#0071e3' },
-    { label: '○ CRM Nurture', value: crm, color: '#636366' },
+    { label: 'Urgent Attention', value: immediate, color: '#d70015' },
+    { label: 'Sales Pipeline', value: standard, color: '#0071e3' },
+    { label: 'CRM Nurture', value: crm, color: '#636366' },
   ]
 
   return (
@@ -117,9 +117,6 @@ function EmptyState({ configured }: { configured: boolean }) {
         color: 'var(--text-muted)',
       }}
     >
-      <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
-        {configured ? '📬' : '⚙️'}
-      </div>
       <h3 className="apple-heading-lg" style={{ marginBottom: '0.5rem' }}>
         {configured ? 'No leads submitted yet' : 'Supabase credentials missing'}
       </h3>
@@ -144,7 +141,7 @@ export default async function LeadsPage() {
   const configured = Boolean(process.env.SUPABASE_URL)
 
   return (
-    <div style={{ minHeight: '100vh', padding: '3rem 2rem', background: '#f5f5f7' }}>
+    <div style={{ minHeight: '100vh', padding: '3.5rem 2rem', background: '#f5f5f7' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         {/* Header Bar */}
         <header

@@ -3,15 +3,28 @@
 /**
  * components/LeadForm/LeadForm.tsx
  *
- * Clean, large Apple-styled lead form.
+ * Premium B2B Lead Form with custom dropdowns & zero native browser select popups.
  */
 
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { leadSchema, type LeadFormValues } from '@/lib/validation/leadSchema'
 import type { Lead } from '@/domain/types'
+import CustomSelect from '@/components/UI/CustomSelect'
 import ConfirmationScreen from './ConfirmationScreen'
+
+const COMPANY_SIZE_OPTIONS = [
+  { value: '1-10', label: '1–10 employees' },
+  { value: '11-49', label: '11–49 employees' },
+  { value: '50-199', label: '50–199 employees' },
+  { value: '200+', label: '200+ employees' },
+]
+
+const BUDGET_OPTIONS = [
+  { value: 'under_10k', label: 'Under $10,000' },
+  { value: '10k_plus', label: '$10,000 or more' },
+]
 
 export default function LeadForm() {
   const [submittedLead, setSubmittedLead] = useState<Lead | null>(null)
@@ -20,10 +33,18 @@ export default function LeadForm() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<LeadFormValues>({
     resolver: zodResolver(leadSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      companySize: undefined,
+      budget: undefined,
+      intent: '',
+    },
   })
 
   const onSubmit = async (data: LeadFormValues) => {
@@ -58,7 +79,11 @@ export default function LeadForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+      style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}
+    >
       {/* Full Name */}
       <div>
         <label htmlFor="name" className="field-label">
@@ -68,7 +93,7 @@ export default function LeadForm() {
           id="name"
           type="text"
           autoComplete="name"
-          placeholder="e.g. Sarah Jenkins"
+          placeholder="Alex Rivera"
           className="field-input"
           aria-invalid={!!errors.name}
           {...register('name')}
@@ -89,7 +114,7 @@ export default function LeadForm() {
           id="email"
           type="email"
           autoComplete="email"
-          placeholder="sarah@company.com"
+          placeholder="alex@company.com"
           className="field-input"
           aria-invalid={!!errors.email}
           {...register('email')}
@@ -101,24 +126,27 @@ export default function LeadForm() {
         )}
       </div>
 
-      {/* Company Size & Budget Grid */}
+      {/* Custom Selects Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+        {/* Company Size Custom Dropdown */}
         <div>
           <label htmlFor="companySize" className="field-label">
             Company Size
           </label>
-          <select
-            id="companySize"
-            className="field-input field-select"
-            aria-invalid={!!errors.companySize}
-            {...register('companySize')}
-          >
-            <option value="">Select size</option>
-            <option value="1-10">1–10 employees</option>
-            <option value="11-49">11–49 employees</option>
-            <option value="50-199">50–199 employees</option>
-            <option value="200+">200+ employees</option>
-          </select>
+          <Controller
+            name="companySize"
+            control={control}
+            render={({ field }) => (
+              <CustomSelect
+                id="companySize"
+                options={COMPANY_SIZE_OPTIONS}
+                value={field.value || ''}
+                onChange={field.onChange}
+                placeholder="Select size"
+                error={errors.companySize?.message}
+              />
+            )}
+          />
           {errors.companySize && (
             <p className="field-error" role="alert">
               {errors.companySize.message}
@@ -126,20 +154,25 @@ export default function LeadForm() {
           )}
         </div>
 
+        {/* Budget Custom Dropdown */}
         <div>
           <label htmlFor="budget" className="field-label">
             Annual Budget
           </label>
-          <select
-            id="budget"
-            className="field-input field-select"
-            aria-invalid={!!errors.budget}
-            {...register('budget')}
-          >
-            <option value="">Select budget</option>
-            <option value="under_10k">Under $10k</option>
-            <option value="10k_plus">$10k or more</option>
-          </select>
+          <Controller
+            name="budget"
+            control={control}
+            render={({ field }) => (
+              <CustomSelect
+                id="budget"
+                options={BUDGET_OPTIONS}
+                value={field.value || ''}
+                onChange={field.onChange}
+                placeholder="Select budget"
+                error={errors.budget?.message}
+              />
+            )}
+          />
           {errors.budget && (
             <p className="field-error" role="alert">
               {errors.budget.message}
@@ -148,15 +181,15 @@ export default function LeadForm() {
         </div>
       </div>
 
-      {/* Intent / Notes */}
+      {/* Intent Textarea */}
       <div>
         <label htmlFor="intent" className="field-label">
-          How can we help you?
+          Project Intent & Timeline
         </label>
         <textarea
           id="intent"
           rows={4}
-          placeholder="Describe your timeline, project goals, or specific requirements..."
+          placeholder="Describe your goals, requirements, or desired timeline..."
           className="field-input"
           style={{ resize: 'vertical', minHeight: '6.5rem' }}
           aria-invalid={!!errors.intent}
@@ -195,14 +228,7 @@ export default function LeadForm() {
         className="btn-primary"
         style={{ marginTop: '0.5rem' }}
       >
-        {isSubmitting ? (
-          <>
-            <span className="spinner" aria-hidden="true" />
-            Submitting request...
-          </>
-        ) : (
-          'Submit Request'
-        )}
+        {isSubmitting ? 'Submitting Request...' : 'Submit Request'}
       </button>
     </form>
   )
