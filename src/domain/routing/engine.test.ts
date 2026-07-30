@@ -48,25 +48,44 @@ describe('routeLead', () => {
       expect(result.matchedRules).toEqual(['urgency_detected'])
     })
 
-    it('detects "this quarter" as an urgency keyword', () => {
-      const result = routeLead(makeLead({ intent: 'need to launch this quarter' }))
-      expect(result.route).toBe('human_immediate')
-      expect(result.matchedRules).toContain('urgency_detected')
+    it('detects positive urgency keywords correctly', () => {
+      const positiveInputs = [
+        'Need this ASAP',
+        'Production issue, urgent',
+        'Need this this quarter',
+        'We have a strict deadline',
+        'Planning to launch next week',
+        'NEED THIS IMMEDIATELY',
+        'want to get started as soon as possible',
+      ]
+
+      for (const intent of positiveInputs) {
+        const result = routeLead(makeLead({ intent }))
+        expect(result.route).toBe('human_immediate')
+        expect(result.matchedRules).toContain('urgency_detected')
+      }
     })
 
-    it('detects "as soon as possible" as an urgency keyword', () => {
-      const result = routeLead(makeLead({ intent: 'want to get started as soon as possible' }))
-      expect(result.route).toBe('human_immediate')
-    })
+    it('correctly handles negations and does NOT trigger urgency', () => {
+      const negativeInputs = [
+        'This is NOT urgent',
+        'No rush at all',
+        'We can wait until next year',
+        'Eventually we\'d like to migrate',
+        'This is NOT urgent at all, we can wait months, no rush needed.',
+        'No immediate need for this project',
+        'Not time sensitive',
+        'No deadline for this effort',
+        'Someday we will upgrade',
+        'Whenever you get a chance, no time pressure',
+        'not a priority right now',
+      ]
 
-    it('matches urgency keywords case-insensitively', () => {
-      const result = routeLead(makeLead({ intent: 'NEED THIS IMMEDIATELY' }))
-      expect(result.route).toBe('human_immediate')
-    })
-
-    it('does not trigger urgency on a neutral intent string', () => {
-      const result = routeLead(makeLead({ intent: 'exploring our options for next year' }))
-      expect(result.route).not.toBe('human_immediate')
+      for (const intent of negativeInputs) {
+        const result = routeLead(makeLead({ intent, companySize: '1-10', budget: 'under_10k' }))
+        expect(result.route).toBe('crm_only')
+        expect(result.matchedRules).not.toContain('urgency_detected')
+      }
     })
   })
 

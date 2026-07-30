@@ -28,23 +28,60 @@ export interface Rule {
 // ---------------------------------------------------------------------------
 
 /**
+ * Negation phrases that explicitly indicate the request is NOT urgent.
+ * Evaluated BEFORE urgency keywords to prevent false positive matching
+ * in negated statements like "This is NOT urgent at all, we can wait months".
+ */
+const NEGATION_PHRASES = [
+  'not urgent',
+  'no rush',
+  'not immediate',
+  'no immediate need',
+  'can wait',
+  'next year',
+  'someday',
+  'eventually',
+  'no deadline',
+  'whenever',
+  'not time sensitive',
+  'not time-sensitive',
+  'no time pressure',
+  'not a priority',
+] as const
+
+/**
  * Keywords that indicate a lead needs human attention right now.
- * Case-insensitive substring matching is intentional — natural language
- * is messy and we prefer false positives over missed urgency signals.
+ * Checked ONLY if no negation phrases are detected.
  */
 const URGENCY_KEYWORDS = [
   'asap',
-  'immediately',
   'urgent',
+  'immediately',
   'this week',
+  'this month',
   'this quarter',
   'right away',
   'as soon as possible',
+  'deadline',
+  'launch next week',
+  'production issue',
   'time-sensitive',
+  'time sensitive',
 ] as const
 
-function detectUrgency(intent: string): boolean {
-  const normalized = intent.toLowerCase()
+export function detectUrgency(intent: string): boolean {
+  // Step 1: Normalize text (lowercase, collapse whitespace, trim)
+  const normalized = intent.toLowerCase().replace(/\s+/g, ' ').trim()
+
+  if (!normalized) return false
+
+  // Step 2: Check for explicit negations first
+  const hasNegation = NEGATION_PHRASES.some((phrase) => normalized.includes(phrase))
+  if (hasNegation) {
+    return false
+  }
+
+  // Step 3: Check for urgency keywords
   return URGENCY_KEYWORDS.some((keyword) => normalized.includes(keyword))
 }
 

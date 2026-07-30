@@ -82,8 +82,6 @@ To add a new rule: register its name in `domain/types.ts → RuleName`, then ins
 | `human_standard` | Company ≥50 employees **and** budget ≥$10k | Sales |
 | `crm_only` | Everything else — stored for nurture | Growth |
 
----
-
 ### Why `matchedRules` Exists
 
 `matchedRules` is an **explainability feature**, not a debug field. It answers:
@@ -94,6 +92,37 @@ To add a new rule: register its name in `domain/types.ts → RuleName`, then ins
 - **Future ML**: Ground truth labels for supervised learning if routing is ever AI-assisted.
 
 `matchedRules` is typed as `RuleName[]` (not `string[]`) so the compiler catches typos and keeps rule registration centralised in `domain/types.ts`.
+
+---
+
+### Negation-First Urgency Detection & Trade-offs
+
+Naive keyword matching (`intent.includes('urgent')`) fails on negated sentences such as:
+> *"This is NOT urgent at all, we can wait months, no rush needed."*
+
+A naive check matches the substring `"urgent"` and incorrectly routes the lead to `human_immediate`.
+
+To solve this deterministically without introducing external NLP packages or LLMs, `detectUrgency()` executes a 3-step pipeline:
+
+1. **Normalization**: Lowercases text, collapses repeated whitespace, and trims the string.
+2. **Negation Guard**: Checks for explicit non-urgency phrases first (e.g., `not urgent`, `no rush`, `can wait`, `not time sensitive`, `eventually`, `no deadline`). If any negation is found, it immediately returns `false`.
+3. **Urgency Match**: Only if no negation phrase is found, evaluates urgency keywords (e.g., `asap`, `urgent`, `immediately`, `this quarter`, `deadline`, `production issue`).
+
+#### Trade-offs & Design Rationale
+
+| Aspect | Negation-First Rule Engine | LLM Classifier |
+|---|---|---|
+| **Determinism** | 100% predictable & reproducible | Non-deterministic (temperature drift) |
+| **Latency** | Sub-millisecond execution | 300ms–2000ms API round-trip |
+| **Dependencies & Cost** | Zero external packages, zero API cost | Third-party SDK & token costs |
+| **Auditability** | Direct rule inspection & unit tests | Black-box output |
+
+**Known Limitations & Edge Cases:**
+- **Complex syntactical negations**: Sentences like *"We are not saying this is urgent, but we must launch by Friday"* contain a negation phrase (`not saying this is urgent`) that suppresses the urgency match.
+- **Double negations**: Statements like *"It is not un-urgent"* cannot be reliably parsed without full AST/dependency parsing.
+
+**Why this is an improvement:**
+It eliminates common false-positive emergency alerts caused by negated user statements (`"not urgent"`, `"no rush"`, `"can wait"`), maintaining 100% determinism, sub-millisecond performance, and full testability.
 
 ---
 
