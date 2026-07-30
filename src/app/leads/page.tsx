@@ -2,13 +2,6 @@ import type { Lead } from '@/domain/types'
 import Link from 'next/link'
 import LeadsInboxView from '@/components/Leads/LeadsInboxView'
 
-/**
- * app/leads/page.tsx
- *
- * Internal inspection page. Server Component fetches leads from Supabase and passes
- * them to LeadsInboxView for interactive client-side sorting and rendering.
- */
-
 export const dynamic = 'force-dynamic'
 
 async function getLeads(): Promise<Lead[]> {
@@ -30,7 +23,6 @@ export default async function LeadsPage() {
   return (
     <div style={{ minHeight: '100vh', padding: '3.5rem 2rem', background: '#f5f5f7' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        {/* Header Bar */}
         <header
           style={{
             display: 'flex',
@@ -54,7 +46,6 @@ export default async function LeadsPage() {
           </Link>
         </header>
 
-        {/* Client-side Inbox View with Sorting */}
         <LeadsInboxView initialLeads={leads} configured={configured} />
       </div>
     </div>

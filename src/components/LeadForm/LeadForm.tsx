@@ -1,11 +1,5 @@
 'use client'
 
-/**
- * components/LeadForm/LeadForm.tsx
- *
- * Premium B2B Lead Form with custom dropdowns & zero native browser select popups.
- */
-
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
@@ -84,7 +78,6 @@ export default function LeadForm() {
       noValidate
       style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}
     >
-      {/* Name */}
       <div>
         <label htmlFor="name" className="field-label">
           Name
@@ -105,7 +98,6 @@ export default function LeadForm() {
         )}
       </div>
 
-      {/* Email */}
       <div>
         <label htmlFor="email" className="field-label">
           Email
@@ -126,9 +118,7 @@ export default function LeadForm() {
         )}
       </div>
 
-      {/* Custom Selects Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-        {/* Company Size Custom Dropdown */}
         <div>
           <label htmlFor="companySize" className="field-label">
             Company Size
@@ -154,7 +144,6 @@ export default function LeadForm() {
           )}
         </div>
 
-        {/* Budget Custom Dropdown */}
         <div>
           <label htmlFor="budget" className="field-label">
             Budget
@@ -181,7 +170,6 @@ export default function LeadForm() {
         </div>
       </div>
 
-      {/* Intent Textarea */}
       <div>
         <label htmlFor="intent" className="field-label">
           What are you looking to solve?
@@ -202,7 +190,6 @@ export default function LeadForm() {
         )}
       </div>
 
-      {/* Server Error Alert */}
       {serverError && (
         <div
           role="alert"
@@ -220,7 +207,6 @@ export default function LeadForm() {
         </div>
       )}
 
-      {/* Submit Button */}
       <button
         type="submit"
         id="submit-lead-form"

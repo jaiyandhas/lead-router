@@ -32,7 +32,6 @@ export default function CustomSelect({
 
   const selectedOption = options.find((opt) => opt.value === value)
 
-  // Close dropdown on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -43,7 +42,6 @@ export default function CustomSelect({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Keyboard navigation
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Escape') {
       setIsOpen(false)
@@ -55,7 +53,6 @@ export default function CustomSelect({
 
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
-      {/* Custom Trigger Button */}
       <button
         id={selectId}
         type="button"

@@ -131,7 +131,6 @@ function EmptyState({ configured }: { configured: boolean }) {
 export default function LeadsInboxView({ initialLeads, configured }: Props) {
   const [sortBy, setSortBy] = useState<SortOption>('newest')
 
-  // Client-side sorting logic
   const sortedLeads = [...initialLeads].sort((a, b) => {
     if (sortBy === 'newest') {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

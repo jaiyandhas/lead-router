@@ -89,7 +89,7 @@ To add a new rule: register its name in `domain/types.ts → RuleName`, then ins
 - **Sales**: "Why wasn't this lead routed to me?"
 - **Support**: "Why didn't anyone call this person back?"
 - **Audit**: Historical record of exactly which rule fired at the time of submission — even if rules change later.
-- **Future ML**: Ground truth labels for supervised learning if routing is ever AI-assisted.
+- **Future ML**: Ground truth labels for supervised learning if routing models are introduced.
 
 `matchedRules` is typed as `RuleName[]` (not `string[]`) so the compiler catches typos and keeps rule registration centralised in `domain/types.ts`.
 
@@ -102,7 +102,7 @@ Naive keyword matching (`intent.includes('urgent')`) fails on negated sentences 
 
 A naive check matches the substring `"urgent"` and incorrectly routes the lead to `human_immediate`.
 
-To solve this deterministically without introducing external NLP packages or LLMs, `detectUrgency()` executes a 3-step pipeline:
+To solve this deterministically without introducing external NLP packages or heavy dependencies, `detectUrgency()` executes a 3-step pipeline:
 
 1. **Normalization**: Lowercases text, collapses repeated whitespace, and trims the string.
 2. **Negation Guard**: Checks for explicit non-urgency phrases first (e.g., `not urgent`, `no rush`, `can wait`, `not time sensitive`, `eventually`, `no deadline`). If any negation is found, it immediately returns `false`.
@@ -110,7 +110,7 @@ To solve this deterministically without introducing external NLP packages or LLM
 
 #### Trade-offs & Design Rationale
 
-| Aspect | Negation-First Rule Engine | LLM Classifier |
+| Aspect | Negation-First Rule Engine | Complex External Classifier |
 |---|---|---|
 | **Determinism** | 100% predictable & reproducible | Non-deterministic (temperature drift) |
 | **Latency** | Sub-millisecond execution | 300ms–2000ms API round-trip |

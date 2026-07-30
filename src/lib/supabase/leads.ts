@@ -1,32 +1,6 @@
 import type { Lead, NewLead } from '@/domain/types'
 import { supabase } from './client'
 
-/**
- * lib/supabase/leads.ts
- *
- * All database operations on the `leads` table.
- *
- * This module knows about:
- * - Supabase (the database client)
- * - The leads table schema (column names, types)
- * - Our domain types (Lead, NewLead)
- *
- * This module must NOT know about:
- * - Routing logic or how urgency is detected
- * - HTTP (no Request/Response objects)
- * - React (no hooks, no components)
- * - Validation (Zod lives in lib/validation/)
- */
-
-// ---------------------------------------------------------------------------
-// Database row type
-//
-// Postgres returns snake_case column names. Our domain types use camelCase.
-// This interface represents the raw shape Supabase returns — it is private
-// to this module. Nothing outside leads.ts needs to know the DB uses
-// snake_case.
-// ---------------------------------------------------------------------------
-
 interface LeadRow {
   id: string
   created_at: string
@@ -40,16 +14,6 @@ interface LeadRow {
   reason: string
   matched_rules: string[]
 }
-
-// ---------------------------------------------------------------------------
-// Column mapping
-//
-// Translates a raw database row into our domain Lead type.
-// The `as` casts are intentional: Supabase returns plain strings, not our
-// union types. The database CHECK constraints enforce that only valid values
-// are stored, so the cast is safe. In a stricter production system you would
-// parse through Zod here to validate at the boundary.
-// ---------------------------------------------------------------------------
 
 function toDomainLead(row: LeadRow): Lead {
   return {
@@ -66,16 +30,6 @@ function toDomainLead(row: LeadRow): Lead {
     matchedRules: row.matched_rules as Lead['matchedRules'],
   }
 }
-
-// ---------------------------------------------------------------------------
-// createLead
-//
-// Writes a NewLead to the database and returns the full persisted Lead.
-// The database generates id and created_at — we do not supply them.
-//
-// .select().single() tells Supabase to return the inserted row immediately.
-// Without .select(), insert() returns no data by default.
-// ---------------------------------------------------------------------------
 
 export async function createLead(newLead: NewLead): Promise<Lead> {
   const { data, error } = await supabase
@@ -100,14 +54,6 @@ export async function createLead(newLead: NewLead): Promise<Lead> {
 
   return toDomainLead(data as LeadRow)
 }
-
-// ---------------------------------------------------------------------------
-// listLeads
-//
-// Returns all leads ordered by most recently submitted first.
-// Used by the internal /leads inspection page.
-// No pagination for this assignment — acceptable at take-home scale.
-// ---------------------------------------------------------------------------
 
 export async function listLeads(): Promise<Lead[]> {
   const { data, error } = await supabase

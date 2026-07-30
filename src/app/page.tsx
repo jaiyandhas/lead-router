@@ -1,13 +1,6 @@
 import LeadForm from '@/components/LeadForm/LeadForm'
 import Link from 'next/link'
 
-/**
- * app/page.tsx
- *
- * Premium B2B Lead Routing Portal Landing Page.
- * Clean, large typography-driven UI with zero icons.
- */
-
 export default function HomePage() {
   return (
     <main
@@ -22,7 +15,6 @@ export default function HomePage() {
       }}
     >
       <div style={{ width: '100%', maxWidth: 560 }}>
-        {/* Clean Typography Header */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <h1 className="apple-heading-xl" style={{ marginBottom: '0.75rem' }}>
             Get in touch with us
@@ -32,12 +24,10 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Form Container Card */}
         <div className="apple-card" style={{ padding: '2.5rem' }}>
           <LeadForm />
         </div>
 
-        {/* Footer Link & Disclaimer */}
         <div
           style={{
             marginTop: '2.25rem',

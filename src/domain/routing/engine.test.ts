@@ -2,14 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { routeLead } from './engine'
 import type { LeadInput } from '../types'
 
-// ---------------------------------------------------------------------------
-// Test factory
-//
-// Defaults produce a crm_only lead — small company, low budget, neutral intent.
-// Each test overrides only what it needs to exercise a specific branch.
-// This keeps test cases focused on their own condition, not boilerplate.
-// ---------------------------------------------------------------------------
-
 function makeLead(overrides: Partial<LeadInput> = {}): LeadInput {
   return {
     name: 'Test User',
@@ -21,14 +13,7 @@ function makeLead(overrides: Partial<LeadInput> = {}): LeadInput {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 describe('routeLead', () => {
-
-  // --- Priority 1: urgency_detected -----------------------------------------
-
   describe('Priority 1 — urgency_detected', () => {
     it('routes an urgent small company to human_immediate', () => {
       const result = routeLead(
@@ -38,9 +23,7 @@ describe('routeLead', () => {
       expect(result.matchedRules).toEqual(['urgency_detected'])
     })
 
-    it('urgency overrides a fully qualified lead — Priority 1 always fires first', () => {
-      // This lead would be human_standard if urgency were absent.
-      // The test proves urgency wins regardless.
+    it('urgency overrides a fully qualified lead', () => {
       const result = routeLead(
         makeLead({ companySize: '200+', budget: '10k_plus', intent: 'this is urgent' })
       )
@@ -89,8 +72,6 @@ describe('routeLead', () => {
     })
   })
 
-  // --- Priority 2: qualified_sales_lead -------------------------------------
-
   describe('Priority 2 — qualified_sales_lead', () => {
     it('routes a 50-199 company with 10k+ budget to human_standard', () => {
       const result = routeLead(
@@ -109,7 +90,6 @@ describe('routeLead', () => {
     })
 
     it('does not qualify: large company but insufficient budget', () => {
-      // Size threshold met, budget threshold not met — both must be true.
       const result = routeLead(
         makeLead({ companySize: '200+', budget: 'under_10k', intent: 'interested' })
       )
@@ -117,14 +97,13 @@ describe('routeLead', () => {
     })
 
     it('does not qualify: sufficient budget but company too small', () => {
-      // Budget threshold met, size threshold not met — both must be true.
       const result = routeLead(
         makeLead({ companySize: '1-10', budget: '10k_plus', intent: 'evaluating tools' })
       )
       expect(result.route).toBe('crm_only')
     })
 
-    it('does not qualify: 11-49 employees falls below the 50-employee threshold', () => {
+    it('does not qualify: 11-49 employees falls below threshold', () => {
       const result = routeLead(
         makeLead({ companySize: '11-49', budget: '10k_plus', intent: 'exploring' })
       )
@@ -132,23 +111,19 @@ describe('routeLead', () => {
     })
   })
 
-  // --- Priority 3: crm_only (default fallthrough) ---------------------------
-
   describe('Priority 3 — crm_only default', () => {
     it('routes an unqualified non-urgent lead to crm_only', () => {
       const result = routeLead(makeLead())
       expect(result.route).toBe('crm_only')
     })
 
-    it('crm_only result has an empty matchedRules array — no rules fired', () => {
+    it('crm_only result has an empty matchedRules array', () => {
       const result = routeLead(makeLead())
       expect(result.matchedRules).toEqual([])
     })
   })
 
-  // --- RoutingResult shape --------------------------------------------------
-
-  describe('RoutingResult — shape invariants', () => {
+  describe('RoutingResult invariants', () => {
     it('every result has a numeric score and a non-empty reason string', () => {
       const cases = [
         makeLead({ intent: 'asap' }),
@@ -165,5 +140,4 @@ describe('routeLead', () => {
       }
     })
   })
-
 })
