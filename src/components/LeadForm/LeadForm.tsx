@@ -84,10 +84,10 @@ export default function LeadForm() {
       noValidate
       style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}
     >
-      {/* Full Name */}
+      {/* Name */}
       <div>
         <label htmlFor="name" className="field-label">
-          Full Name
+          Name
         </label>
         <input
           id="name"
@@ -105,10 +105,10 @@ export default function LeadForm() {
         )}
       </div>
 
-      {/* Work Email */}
+      {/* Email */}
       <div>
         <label htmlFor="email" className="field-label">
-          Work Email
+          Email
         </label>
         <input
           id="email"
@@ -157,7 +157,7 @@ export default function LeadForm() {
         {/* Budget Custom Dropdown */}
         <div>
           <label htmlFor="budget" className="field-label">
-            Annual Budget
+            Budget
           </label>
           <Controller
             name="budget"
@@ -184,7 +184,7 @@ export default function LeadForm() {
       {/* Intent Textarea */}
       <div>
         <label htmlFor="intent" className="field-label">
-          Project Intent & Timeline
+          What are you looking to solve?
         </label>
         <textarea
           id="intent"
